@@ -1,0 +1,4 @@
+#!/bin/dash
+[ -d ".pushy" ] && { echo "pushy-init: error: .pushy already exists"; exit 1; }
+mkdir -p ".pushy" && echo "Initialized empty pushy repository in .pushy"
+
