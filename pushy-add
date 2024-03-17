@@ -1,0 +1,20 @@
+#!/bin/dash
+pattern='^[a-zA-Z0-9[a-zA-Z0-9.-_]*$'
+if [ ! -d ".pushy" ];
+then
+	echo "pushy-add: error: pushy repository directory .pushy not found"
+	exit 1
+fi
+for file in "$@"
+do
+	if [ ! -f "$file" ];
+	then
+		echo "pushy-add: error: can not open '$file'"
+		exit 1
+	fi
+	if echo "$file" | egrep -q  "$pattern";
+	then
+		mkdir -p ".pushy/.index"
+		cp -R "$file" ".pushy/.index"
+	fi
+done
