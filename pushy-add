@@ -12,7 +12,7 @@ do
 		echo "pushy-add: error: can not open '$file'"
 		exit 1
 	fi
-	if echo "$file" | egrep -q  "$pattern";
+	if echo "$file" | grep -Eq  "$pattern";
 	then
 		mkdir -p ".pushy/.index"
 		cp -R "$file" ".pushy/.index"
