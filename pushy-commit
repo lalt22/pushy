@@ -10,9 +10,17 @@ pattern='^[^-]*$'
 
 if echo "$2" | grep -Eq "$pattern";
 then
-	cp -R ./ ../	
+	for file in ./*
+	do
+		if [ -f "../$file" ];
+		then
+			cmp --silent "../$file" "$file" && echo "nothing to commit"
+			exit 1
+		fi
+		cp "$file" "../$file"
+	done
 fi
 cd ../ || exit 1
 count=$(< log.txt wc -l)
-echo "Commited as commit $count"
+echo "Committed as commit $count"
 echo "$count $2" >> log.txt
