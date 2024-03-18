@@ -3,24 +3,30 @@ if [ "$#" -ne 2 ]; then
 	echo "Usage: ./pushy-commit -m message"
 	exit 1
 fi
-
-cd ".pushy/.index"|| exit 1;
-pattern='^[^-]*$'
 [ ! "$1" = "-m" ] && echo "Error: Needs -m specifier" && exit 1
 
+cd ".pushy"
+[ ! -d ".commits" ] && mkdir -p ".commits"
+count=$(< log.txt wc -l)
+mkdir -p ".commits/$count"
+cd ".index"|| exit 1;
+pattern='^[^-]*$'
 if echo "$2" | grep -Eq "$pattern";
 then
-	for file in ./*
-	do
-		if [ -f "../$file" ];
-		then
-			cmp --silent "../$file" "$file" && echo "nothing to commit"
-			exit 1
-		fi
-		cp "$file" "../$file"
-	done
+	dirdiff=$(diff ./ ../)
+	echo "$dirdiff"
+	if [ "$dirdiff"=0 ]; then
+		for file in ./*
+		do
+			cp "$file" "../$file"
+			cp "$file" "../.commits/$count/$file"
+		done
+	fi
+	if [ "$dirdiff"=1 ]; then
+		echo "nothing to commit"
+	fi
 fi
 cd ../ || exit 1
-count=$(< log.txt wc -l)
+
 echo "Committed as commit $count"
 echo "$count $2" >> log.txt

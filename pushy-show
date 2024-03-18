@@ -1,0 +1,22 @@
+#!/bin/dash
+
+if [ "$#" -ne 1 ]; then
+	echo "Usage: ./pushy-show [commit]:filename"
+fi
+pattern='^[0-9]*:[a-zA-Z0-9[a-zA-Z0-9.-_]*$'
+
+if echo "$1" | grep -Eq "$pattern";
+then
+	file="${1#*:}"
+	commit="${1%:*}"
+
+	dir=".pushy/.commit/$commit"
+	if echo "$commit" | grep -Eq "";
+	then
+		dir=".pushy"
+	fi
+
+	cd "$dir" || exit 1
+
+	cat "$file"
+fi
