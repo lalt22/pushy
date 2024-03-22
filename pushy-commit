@@ -1,9 +1,36 @@
 #!/bin/dash
-if [ "$#" -ne 2 ]; then
-	echo "Usage: ./pushy-commit -m message"
-	exit 1
+# if [ "$#" -lt 2 ]; then
+# 	echo "Usage: ./pushy-commit [-a] -m message"
+# 	exit 1
+# fi
+
+usage () { echo "Usage: ./pushy-commit [-a] -m message"; exit 1; }
+
+if [ "$#" -lt 2 ]; then
+	usage
 fi
-[ ! "$1" = "-m" ] && echo "Error: Needs -m specifier" && exit 1
+
+a=0
+m=""
+while getopts "am:" o;
+do
+	case "${o}" in
+		a)
+			a=1
+			;;
+		m)
+			m=${OPTARG}
+			;;
+		*)
+			usage
+			;;
+	esac
+done
+
+echo "${a}"
+echo "${m}"
+
+[ ! "$m" ] && usage
 
 cd ".pushy" || exit
 [ ! -d ".commits" ] && mkdir -p ".commits"
@@ -11,25 +38,22 @@ count=$(< log.txt wc -l)
 mkdir -p ".commits/$count"
 cd ".index"|| exit 1;
 pattern='^[^-]*$'
-if echo "$2" | grep -Eq "$pattern";
+if echo "$m" | grep -Eq "$pattern";
 then
-	# dirdiff=$(diff ./ ../)
-	# echo "$dirdiff"
-	# if [ "$dirdiff"=0 ]; then
-	# 	for file in ./*
-	# 	do
-	# 		cp "$file" "../$file"
-	# 		cp "$file" "../.commits/$count/$file"
-	# 	done
-	# fi
-	# if [ "$dirdiff"=1 ]; then
-	# 	echo "nothing to commit"
-	# fi
-
 	changes=0
+
+	if [ "$a" ]:
+	then
+		for file in *
+		do
+			#Get contents from current directory added to index
+			cp "../../$file" "$file"
+		done
+	fi
+
 	for file in *
 	do
-		#First check the if file exists
+		#First check the if file exists in repo
 		if [ ! -f "../$file" ];
 		then
 			changes=$((changes + 1))
