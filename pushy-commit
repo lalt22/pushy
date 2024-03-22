@@ -13,17 +13,42 @@ cd ".index"|| exit 1;
 pattern='^[^-]*$'
 if echo "$2" | grep -Eq "$pattern";
 then
-	dirdiff=$(diff ./ ../)
-	echo "$dirdiff"
-	if [ "$dirdiff"=0 ]; then
-		for file in ./*
-		do
+	# dirdiff=$(diff ./ ../)
+	# echo "$dirdiff"
+	# if [ "$dirdiff"=0 ]; then
+	# 	for file in ./*
+	# 	do
+	# 		cp "$file" "../$file"
+	# 		cp "$file" "../.commits/$count/$file"
+	# 	done
+	# fi
+	# if [ "$dirdiff"=1 ]; then
+	# 	echo "nothing to commit"
+	# fi
+
+	changes=0
+	for file in *
+	do
+		#First check the if file exists
+		if [ ! -f "../$file" ];
+		then 
+			# echo "file not found"
 			cp "$file" "../$file"
 			cp "$file" "../.commits/$count/$file"
-		done
-	fi
-	if [ "$dirdiff"=1 ]; then
+			changes=$(($changes + 1))
+		#Next check if the same as existing file
+		elif ! cmp -s "$file" "../$file";
+		then
+			# echo "file different"
+			cp "$file" "../$file"
+			cp "$file" "../.commits/$count/$file"
+			changes=$(($changes + 1))
+		fi
+	done
+	if [ "$changes" -eq 0 ];
+	then
 		echo "nothing to commit"
+		exit 1
 	fi
 fi
 cd ../ || exit 1
