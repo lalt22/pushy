@@ -5,7 +5,7 @@ if [ "$#" -ne 2 ]; then
 fi
 [ ! "$1" = "-m" ] && echo "Error: Needs -m specifier" && exit 1
 
-cd ".pushy"
+cd ".pushy" || exit
 [ ! -d ".commits" ] && mkdir -p ".commits"
 count=$(< log.txt wc -l)
 mkdir -p ".commits/$count"
@@ -31,24 +31,24 @@ then
 	do
 		#First check the if file exists
 		if [ ! -f "../$file" ];
-		then 
-			# echo "file not found"
-			cp "$file" "../$file"
-			cp "$file" "../.commits/$count/$file"
-			changes=$(($changes + 1))
+		then
+			changes=$((changes + 1))
 		#Next check if the same as existing file
 		elif ! cmp -s "$file" "../$file";
 		then
-			# echo "file different"
-			cp "$file" "../$file"
-			cp "$file" "../.commits/$count/$file"
-			changes=$(($changes + 1))
+			changes=$((changes + 1))
 		fi
 	done
 	if [ "$changes" -eq 0 ];
 	then
 		echo "nothing to commit"
 		exit 1
+	else
+	for file in *
+	do
+		cp "$file" "../$file"
+		cp "$file" "../.commits/$count/$file"
+	done
 	fi
 fi
 cd ../ || exit 1

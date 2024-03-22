@@ -9,14 +9,32 @@ if echo "$1" | grep -Eq "$pattern";
 then
 	file="${1#*:}"
 	commit="${1%:*}"
+	dir=".pushy/.commits/$commit"
 
-	dir=".pushy/.commit/$commit"
-	if echo "$commit" | grep -Eq "";
+	if [ ! "$commit" ];
 	then
-		dir=".pushy"
+		dir=".pushy/.index"
+
+		if [ ! -f "$dir/$file" ];
+		then
+			echo "pushy-show: error: '""$file""' not found in index"
+			exit 1
+		fi
 	fi
 
-	cd "$dir" || exit 1
+	if [ ! -d "$dir" ];
+	then
+		echo "pushy-show: error: unknown commit '""$commit""'"
+		exit 1
+	fi
 
+	if [ ! -f "$dir/$file" ];
+	then
+		echo "pushy-show: error: '""$file""' not found in commit $commit"
+		exit 1
+	fi
+
+
+	cd "$dir" || exit 1
 	cat "$file"
 fi
