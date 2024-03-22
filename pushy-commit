@@ -27,9 +27,6 @@ do
 	esac
 done
 
-echo "${a}"
-echo "${m}"
-
 [ ! "$m" ] && usage
 
 cd ".pushy" || exit
@@ -42,7 +39,7 @@ if echo "$m" | grep -Eq "$pattern";
 then
 	changes=0
 
-	if [ "$a" ]:
+	if [ "$a" -ne 0 ]:
 	then
 		for file in *
 		do
@@ -57,12 +54,26 @@ then
 		if [ ! -f "../$file" ];
 		then
 			changes=$((changes + 1))
-		#Next check if the same as existing file
+		#Next check different to existing file
 		elif ! cmp -s "$file" "../$file";
 		then
 			changes=$((changes + 1))
 		fi
 	done
+
+
+	#If there has been a deletion from the index, remove the file from the repo
+	cd "../" || exit 1
+	for file in *
+	do
+		if [ ! -f ".index/$file" ] && [ ! "$file" = "log.txt" ]
+		then
+			rm "$file"
+			changes=$((changes + 1))
+		fi
+	done
+
+	cd ".index" || exit 1
 	if [ "$changes" -eq 0 ];
 	then
 		echo "nothing to commit"
@@ -70,12 +81,16 @@ then
 	else
 	for file in *
 	do
-		cp "$file" "../$file"
-		cp "$file" "../.commits/$count/$file"
+		if [ ! "$file" = "*" ];
+		then
+			cp "$file" "../$file"
+			cp "$file" "../.commits/$count/$file"
+		fi
 	done
 	fi
 fi
 cd ../ || exit 1
+
 
 echo "Committed as commit $count"
 echo "$count $2" >> log.txt

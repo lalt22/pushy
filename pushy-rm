@@ -1,0 +1,166 @@
+#!/bin/dash
+# VALID_ARGS=$(getopt -o fc --long force,cached -- "$@")
+force=0
+cached=0
+for arg; do
+    case "$arg" in
+        --force)
+            force=1
+            shift 1
+            ;;
+        --cached)
+            cached=1
+            shift 1
+            ;;
+    esac
+done
+
+for file in "$@"
+do
+    #If file to delete not in index throw not in repo error
+    if [ ! -f ".pushy/.index/$file" ];
+    then
+        echo pushy-rm: error: "'"$file"'" is not in the pushy repository
+        exit 1
+    fi
+
+
+    #If we are not forcing or only clearing index
+    #pushy-rm file
+    if [ "$force" -eq 0 ] && [ "$cached" -eq 0 ];
+    then
+        #First check difference in index file
+        # echo "Comparing $file and .pushy/.index/$file"
+
+        #If file is in index
+        if ! cmp -s ".pushy/.index/$file" ".pushy/$file" ;
+        then
+            #If index file is different to working AND repo
+            if ! cmp -s ".pushy/.index/$file" "$file";
+            then
+                echo pushy-rm: error: "'"$file"'" in index is different to both the working file and the repository
+                exit 1
+            fi
+
+            #If just different to repo
+            echo pushy-rm: error: "'"$file"'" has staged changes in the index
+            exit 1
+        fi
+
+        #Next check difference in repo file and working file
+        if ! cmp -s "$file" ".pushy/$file";
+        then
+            echo pushy-rm: error: "'"$file"'" in the repository is different to the working file
+            exit 1
+        fi
+
+        rm "$file"
+        rm ".pushy/.index/$file"
+        continue
+
+    #If we are forcing and only clearing index
+    #pushy-rm --force --cached file
+    elif [ "$force" -ne 0 ] && [ "$cached" -ne 0 ];
+    then
+        #Check file exists in index
+        if [ ! -f ".pushy/.index/$file" ];
+        then
+            echo pushy-rm: error: "'"$file"'" is not in the pushy repository
+            exit 1
+        fi
+
+        #Then delete
+        rm ".pushy/.index/$file"
+        continue
+    fi
+
+    #If forcing deletion from working and index
+    #pushy-rm --force file
+    if [ "$force" -ne 0 ] && [ "$cached" -eq 0 ];
+    then
+        #Check file exists in index
+        if [ ! -f ".pushy/.index/$file" ];
+        then
+            echo pushy-rm: error: "'"$file"'" is not in the pushy repository
+            exit 1
+        fi
+
+        #Then delete
+        rm ".pushy/.index/$file"
+        rm "$file"
+        continue
+    fi
+
+    #If not forcing deletion and only deleting from index
+    #pushy-rm --cached file
+    if [ "$force" -eq 0 ] && [ "$cached" -ne 0 ];
+    then
+        #Check file exists in index
+        if [ ! -f ".pushy/.index/$file" ];
+        then
+            echo pushy-rm: error: "'"$file"'" is not in the pushy repository
+            exit 1
+        fi
+
+        #If index file is different to working AND repo
+        if ! cmp -s ".pushy/.index/$file" ".pushy/$file" ;
+        then
+            #If index file is different to working AND repo
+            if ! cmp -s ".pushy/.index/$file" "$file";
+            then
+                echo pushy-rm: error: "'"$file"'" in index is different to both the working file and the repository
+                exit 1
+            fi
+        fi
+
+        #Then delete
+        rm ".pushy/.index/$file"
+        continue
+    fi
+
+    # #If just forcing
+    # if [ ! "$force" -eq 0 ];
+    # then
+    #     if [ ! -f ".pushy/.index/$file" ];
+    #     then
+    #         echo pushy-rm: error: "'"$file"'" is not in the pushy repository
+    #         exit 1
+    #     fi
+    # #If we are clearing cached, only remove from index
+    # elif [ ! "$cached" -eq 0 ];
+    # then
+    #     #If index file is different to working AND repo
+    #     if ! cmp -s ".pushy/.index/$file" ".pushy/$file" ;
+    #     then
+    #         #If index file is different to working AND repo
+    #         if ! cmp -s ".pushy/.index/$file" "$file";
+    #         then
+    #             echo pushy-rm: error: "'"$file"'" in index is different to both the working file and the repository
+    #             exit 1
+    #         fi
+    #     fi
+
+    #     rm ".pushy/.index/$file"
+    # #Otherwise, remove from index and also remove from current
+    # elif [ "$cached" -eq 0 ];
+    # then
+    #     if ! cmp -s ".pushy/.index/$file" ".pushy/$file" ;
+    #     then
+    #         #If index file is different to working AND repo
+    #         if ! cmp -s ".pushy/.index/$file" "$file";
+    #         then
+    #             echo pushy-rm: error: "'"$file"'" in index is different to both the working file and the repository
+    #             exit 1
+    #         fi
+    #     fi
+    #     rm ".pushy/.index/$file"
+    #     rm "$file"
+    # fi
+
+    # if [ "$force" -ne 0 ];
+    # then
+    #     # echo "Removing file"
+    #     rm "$file"
+    # fi
+
+done

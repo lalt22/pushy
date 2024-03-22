@@ -7,12 +7,16 @@ then
 fi
 for file in "$@"
 do
-	if [ ! -f "$file" ];
+	#If exists in index, but not in working, stage for deletion
+	if [ -f ".pushy/.index/$file" -a ! -f "$file" ];
+	then
+		rm ".pushy/.index/$file"
+	#If doesn't exist in index and doesn't exist in working, error
+	elif [ ! -f "$file" ];
 	then
 		echo "pushy-add: error: can not open '$file'"
 		exit 1
-	fi
-	if echo "$file" | grep -Eq  "$pattern";
+	elif echo "$file" | grep -Eq  "$pattern";
 	then
 		mkdir -p ".pushy/.index"
 		cp -R "$file" ".pushy/.index"

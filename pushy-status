@@ -1,0 +1,56 @@
+#!/bin/dash
+
+for file in *
+do
+	#Check if not in repo at all
+	if [ ! -f ".pushy/$file" ] && [ ! -f ".pushy/.index/$file" ];
+	then
+		echo "$file" - untracked
+		continue
+	fi
+
+	#Check if same as repo
+	if cmp -s "$file" ".pushy/$file";
+	then
+		echo "$file" - same as repo
+		continue
+	fi
+
+	#Check if in index but not in repo
+	if [ -f ".pushy/.index/$file" ] && [ ! -f ".pushy/$file" ];
+	then
+		echo "$file" - added to index
+		continue
+	fi\
+
+	#Check if deleted from index
+	if [ ! -f ".pushy/.index/$file" ];
+	then
+		#Check if deleted in repo
+		if [ ! -f ".pushy/$file" ]
+		then
+			echo "$file" - file deleted
+			continue
+		else
+			echo "$file" - deleted from index
+			continue
+		fi
+	fi
+
+	#Check for changes
+	if ! cmp -s "$file" ".pushy/$file";
+	then
+		#Check if changes staged
+		if cmp -s "$file" ".pushy/.index/$file";
+		then
+			echo "$file" - file changed, changes staged for commit
+			continue
+		#Check if not staged
+		else
+			echo "$file" - file changed, changes not staged for commit
+			continue
+		fi
+	fi
+
+
+done
